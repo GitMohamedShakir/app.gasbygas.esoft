@@ -1,44 +1,46 @@
-import { UserRole } from "@/app/api/types/user";
-import client from "../client";
-import { HTTP_STATUS } from "@/constants/common";
+import { UserRole } from "@/app/api/types/user"
+import { HTTP_STATUS } from "@/constants/common"
+import client from "../client"
 
 interface AuthState {
-  isLoggedIn: boolean;
-  token: string | null;
-  user: null | IUser;
+  isLoggedIn: boolean
+  token: string | null
+  user: null | IUser
 }
 
 interface IUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  userRole: UserRole;
-  outlet?: string;
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  userRole: UserRole
+  outlet?: string
   requestChangePassword?: boolean
+  phoneNumber?: number
+  address?: string
+  nationalIdNumber?: number
 }
 
 interface ILoginPayload {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
-
 
 interface IRegisterPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  nationalIdNumber: string;
-  address: string;
-  phoneNumber: string;
-  userRole: 'BUSINESS' | 'CUSTOMER';
-  businessRegId?: string;
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  confirmPassword: string
+  nationalIdNumber: string
+  address: string
+  phoneNumber: string
+  userRole: "BUSINESS" | "CUSTOMER"
+  businessRegId?: string
 }
 interface IChangePasswordPayload {
-  currentPassword: string;
-  newPassword: string;
+  currentPassword: string
+  newPassword: string
 }
 export const auth = {
   state: {
@@ -47,58 +49,55 @@ export const auth = {
   } as AuthState,
   reducers: {
     setLoggedIn(state: AuthState, payload: boolean) {
-      return { ...state, isLoggedIn: payload };
+      return { ...state, isLoggedIn: payload }
     },
     setUser(state: AuthState, payload: AuthState) {
-      return { ...state, ...payload };
+      return { ...state, ...payload }
     },
-    updateUser(state: AuthState, payload: AuthState['user']) {
-      return { ...state, user: { ...(state.user || {}), ...payload } };
+    updateUser(state: AuthState, payload: AuthState["user"]) {
+      return { ...state, user: { ...(state.user || {}), ...payload } }
     },
     setLogout(state: AuthState) {
-      return { ...state, isLoggedIn: false, user: null };
+      return { ...state, isLoggedIn: false, user: null }
     },
   },
   effects: (dispatch: any) => ({
     async login(payload: ILoginPayload) {
-
-      const result = await client.post('/api/v1/auth/login', payload)
+      const result = await client.post("/api/v1/auth/login", payload)
 
       if (result.status === HTTP_STATUS.OK) {
-        dispatch.auth.setLoggedIn(true);
+        dispatch.auth.setLoggedIn(true)
         dispatch.auth.setUser({
           user: result.data.user,
-          token: result.data.token
+          token: result.data.token,
         })
 
-        localStorage.setItem('token', result.data.token);
+        localStorage.setItem("token", result.data.token)
       }
-
     },
     async fetchUser() {
-      const result = await client.get('/api/v1/user/fetch-user')
+      const result = await client.get("/api/v1/user/fetch-user")
 
       if (result.status === HTTP_STATUS.OK) {
         dispatch.auth.setUser({
-          user: result.data.user
+          user: result.data.user,
         })
       }
     },
     async register(payload: IRegisterPayload) {
-      await client.post('/api/v1/auth/register', payload)
+      await client.post("/api/v1/auth/register", payload)
     },
-    async forgotPassword(payload: { email: string; }) {
-    },
+    async forgotPassword(payload: { email: string }) {},
     async changePassword(payload: IChangePasswordPayload) {
-      const result = await client.post('/api/v1/auth/change-password', payload)
+      const result = await client.post("/api/v1/auth/change-password", payload)
       if (result.status === HTTP_STATUS.OK) {
         dispatch.auth.updateUser({ requestChangePassword: false })
         return result.data
       }
     },
     async logout() {
-      dispatch.auth.setLogout();
-      localStorage.removeItem('token');
-    }
-  })
-};
+      dispatch.auth.setLogout()
+      localStorage.removeItem("token")
+    },
+  }),
+}
